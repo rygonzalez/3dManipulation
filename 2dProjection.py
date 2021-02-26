@@ -32,12 +32,14 @@ lineZ = np.hypot(lineX, lineY) # z-coords
 line = np.stack((lineX, lineY, lineZ)) 
 
 # generating line projection & projection plane
-projectedLine, plane = orthogonalProjectionMatrix(0, 0, 1) # calculates proj & plane - does this take the origin?
+projectedLine, plane = orthogonalProjectionMatrix(0, 0, 1) # calculates proj & plane
 lineProjection = np.dot(projectedLine, line) # final line projection calcs
+
+print(lineProjection[0])
 
 # plotting various components
 ax = plt.axes(projection="3d")
-ax.plot3D([0,1], [0,1], [0,1], c='b') # original line
+ax.plot3D(line[0], line[1], line[2], c='b') # original line
 ax.plot3D(lineProjection[0], lineProjection[1], lineProjection[2], c='r') # projected line
 ax.plot_surface(plane[0], plane[1], plane[2], alpha=0.5, color='g') # projection plane
 plt.show()
