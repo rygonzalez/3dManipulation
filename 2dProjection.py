@@ -1,40 +1,42 @@
-#Developed by Aaron Lozhkin
-#2/20/21 - 2D Projection of Vector on Plane
+#Developed by Aaron Lozhkin - Modified by Ryan
+#2/25/21 - 2D Projection of Vector on Plane
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 import numpy as np
-import time
 
-def orthogonalProjectionMatrix(a, b, c):
-    V1 = [1, 0, (-a/c)]
-    vector1 = np.array(V1)
-    VP = [a, b, c]
-    vPerp = np.array(VP)
+def orthogonalProjectionMatrix(a, b, c): # struggling to determine how first block of math works
+    # generating & collecting our data
+    vector1 = np.array([1, 0, (-a/c)]) # why is this chosen. Don't understand math
+    vPerp = np.array([a, b, c]) # are we defining our perpendicular line?
     vector2 = np.cross(vector1, vPerp)
     C = np.column_stack((vector1, vector2))
-    ProjectionMatrix = np.dot(np.dot(C, np.linalg.inv(np.dot(np.transpose(C), C))), np.transpose(C))
-    xx, yy = np.meshgrid(range(10), range(10))
-    z = (-vPerp[0] * xx - vPerp[1] * yy) * 1. / vPerp[2]
-    ax.plot_surface(xx, yy, z, alpha=0.2)
-    return ProjectionMatrix
+    
+    # creating matrix of the projection of our line upon the 
+    ProjectionMatrix = np.dot(
+        np.dot(C, np.linalg.inv(np.dot(np.transpose(C), C))), np.transpose(C))
+    
+    # creating the plane to be projected upon
+    planeX, planeY = np.meshgrid(range(-5, 6), range(-5, 6)) # choose size of plane here
+    planeZ = (-vPerp[0] * planeX - vPerp[1] * planeY) / vPerp[2] #calculates based off X & Y 
+    projectionPlane = [planeX, planeY, planeZ]
+    return ProjectionMatrix, projectionPlane
 
-def z_function(x,y):
-    return np.sqrt(x**2 + y**2)
+# generating our original line (blue)
+lineX = np.linspace(0, 1, 100) # x-coords
+lineY = np.linspace(0, 1, 100) # y-coords
+lineZ = np.hypot(lineX, lineY) # z-coords
+line = np.stack((lineX, lineY, lineZ)) 
 
-x = np.linspace(-5,5,100)
-y = np.linspace(-5,5,100)
+print(line)
 
-z = z_function(x,y)
+# generating line projection (orange) & projection plane
+projectedLine, plane = orthogonalProjectionMatrix(0, 0, 1) # calculates proj & plane - does this take the origin?
+projection = np.dot(projectedLine, line) # final line projection calcs
 
-arr = np.stack((x, y, z))
-
+# plotting various components
 ax = plt.axes(projection="3d")
-
-PW = orthogonalProjectionMatrix(3, -2, 4)
-
-graph = np.dot(PW, arr)
-
-ax.plot3D(arr[0,:], arr[1,:], arr[2,:])
-ax.plot3D(graph[0,:], graph[1,:], graph[2,:])
+ax.plot3D([0,1], [0,1], [0,1]) # original line
+ax.plot3D(projection[0], projection[1], projection[2]) # projected line
+ax.plot_surface(plane[0], plane[1], plane[2], alpha=0.2) # projection plane
 plt.show()
