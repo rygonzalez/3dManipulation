@@ -35,8 +35,6 @@ line = np.stack((lineX, lineY, lineZ))
 projectedLine, plane = orthogonalProjectionMatrix(0, 0, 1) # calculates proj & plane
 lineProjection = np.dot(projectedLine, line) # final line projection calcs
 
-print(lineProjection[0])
-
 # plotting various components
 ax = plt.axes(projection="3d")
 ax.plot3D(line[0], line[1], line[2], c='b') # original line
