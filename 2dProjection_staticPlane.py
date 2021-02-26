@@ -13,7 +13,7 @@ def generateProjectionPlane():
     
     return X, Y, Z, v1, v2
 
-# generating plane & respective normal vectors
+# generating plane & respective parallel vectors
 X, Y, Z, v1, v2 = generateProjectionPlane()
 
 #plotting plane
@@ -52,7 +52,7 @@ spiral = np.stack((xSpiral, ySpiral, zSpiral)) # storing original spiral
 
 # generating spiral projection onto plane
 spiralProj = np.empty(shape=(3,100)) # need to do this so we don't make spiral 
-for i in range(spiral.shape[0]):                   # and spiralProj the same object
+for i in range(spiral.shape[0]):     # and spiralProj the same object
     spiralProj[i] = spiral[i]
 
 for i in range(spiral.shape[0]): # no idea why this will rarely break, maybe not truly n[i]!=0?
@@ -67,11 +67,13 @@ ax.plot3D(proj[0], proj[1], proj[2], c = 'r') # projected vector
 ax.plot(spiral[0], spiral[1], spiral[2])
 ax.plot(spiralProj[0], spiralProj[1], spiralProj[2])
 
-ax.legend(['Original Line','Projected Line']) # for lines
-ax.legend(['Original Spiral', 'Projected Spiral']) # for spirals
+# ax.legend(['Original Line','Projected Line']) # for lines
+# ax.legend(['Original Spiral', 'Projected Spiral']) # for spirals
 ax.legend(['Original Line','Projected Line', 'Original Spiral', 'Projected Spiral']) # for both
 
 # uncomment/alter to change viewing angle
 # ax.view_init(elev=0,azim=0) # parallel to plane
 # ax.view_init(elev=0,azim=90) # head-on to plane
 # ax.view_init(elev=90,azim=0) # above plane
+
+plt.show() # display figures at end
