@@ -1,79 +1,80 @@
+# =============================================================================
+# Projecting a complex body onto a plane*
+# 
+# *Can only work with planes along XY/YZ/XZ axes
+# *Only tested on YZ so far
+# =============================================================================
+
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 
-def generateProjectionPlane():
-    ''' Simple function to generate static plane for projection on XZ axes'''
-    xs = np.linspace(-10, 10, 100)
-    zs = np.linspace(-10, 10, 100)
-    X, Z = np.meshgrid(xs, zs)
-    Y = 0
-    
-    v1 = np.array([1,0,0])
-    v2 = np.array([0,0,1])
-    
-    return X, Y, Z, v1, v2
+def YZplane(): # some of this is hard-coded in - will need to play with more
+    # generate YZ plane stuffs
+    X = 0
+    ys = np.linspace(-30, 30, 100)
+    zs = np.linspace(-30, 30, 100)
+    Y, Z = np.meshgrid(ys, zs)
+    origin = np.zeros(3) # origin [0,0,0]
+    norm = np.array([1,0,0]) # normal unit vector [1, 0, 0]
+    return X, Y, Z, origin, norm
 
-# generating plane & respective parallel vectors
-X, Y, Z, v1, v2 = generateProjectionPlane()
+# plane projection method for body composing of a 3xN array of XYZ coordinates
+def projectBody(body, origin, normal):
+    projection = np.zeros(body.shape) # initialize array
+    for i in range(body.shape[0]): # calculate projection
+        point = body[i]
+        v = point - origin
+        dist = v[0]*normal[0] + v[1]*normal[1] + v[2]*normal[2]
+        projection[i] = point - dist*normal
+    return projection
+
+# make a 3xN XYZ coord array for a line
+def makeLine(x, y, z, lineOrigin):
+    xCoords = np.linspace(0, x, 100)
+    yCoords = np.linspace(0, y, 100)
+    zCoords = np.linspace(0, z, 100)
+    line = np.transpose(np.stack((xCoords, yCoords, zCoords))) # store line
+    line = line[:] + lineOrigin # translate to line's origin
+    return line
+
+# compact test spiral body generator
+def makeSpiral(spiralOrigin):
+    # generating theta, x, y, z data for spiral shape
+    theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
+    zCoords = np.linspace(-5, 5, 100)
+    radius = zCoords**2 + 1
+    xCoords = radius * np.sin(theta)
+    yCoords = radius * np.cos(theta)
+    spiral = np.transpose(np.stack((xCoords, yCoords, zCoords))) # store spiral
+    spiral = spiral[:] + spiralOrigin # translate to spiral's origin
+    return spiral
+
+# generate plane stuff
+X, Y, Z, origin, norm = YZplane()
+
+# generate the body
+# body = makeLine(10, 5, -20, lineOrigin=np.array([30, 0, 0])) # for line
+body = makeSpiral(spiralOrigin=np.array([30, 0, 0])) # for spiral
+
+# generate a project (can use line or spiral as of now)
+projection = projectBody(body, origin, norm)
 
 #plotting plane
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot_surface(X, Y, Z, alpha = 0.3)
 plt.tight_layout()
+ax.plot_surface(X, Y, Z, alpha = 0.3)
 
-# generating vector (u) and it's projection (proj)
-u = np.array([2,5,8]) # vector in question
-n = np.cross(v1, v2) # vector orthogonal to plane (XZ for this application)
-n_norm = np.sqrt(sum(n**2)) # normal of n
-
-proj = u-(np.dot(u, n)/n_norm**2)*n  # calculating projection
-
-# creating line for original vector (blue)
-lineX = np.linspace(0, u[0], 100) # x-coords
-lineY = np.linspace(0, u[1], 100) # y-coords
-lineZ = np.linspace(0, u[2], 100) # z-coords
-line = np.stack((lineX, lineY, lineZ)) # collected data
-
-# creating line for projected vector (red)
-projX = np.linspace(0, proj[0], 100) # x-coords
-projY = np.linspace(0, proj[1], 100) # y-coords
-projZ = np.linspace(0, proj[2], 100) # z-coords
-proj = np.stack((projX, projY, projZ)) # collected data
-
-# Spiral Stuff [experimenting]
-# generating theta, x, y, z data for spiral shape
-theta = np.linspace(-4 * np.pi, 4 * np.pi, 100)
-zSpiral = np.linspace(-2, 2, 100)
-rSpiral = zSpiral**2 + 1
-xSpiral = rSpiral * np.sin(theta)
-ySpiral = rSpiral * np.cos(theta)
-spiral = np.stack((xSpiral, ySpiral, zSpiral)) # storing original spiral
-
-# generating spiral projection onto plane
-spiralProj = np.empty(shape=(3,100)) # need to do this so we don't make spiral 
-for i in range(spiral.shape[0]):     # and spiralProj the same object
-    spiralProj[i] = spiral[i]
-
-for i in range(spiral.shape[0]): # no idea why this will rarely break, maybe not truly n[i]!=0?
-    if n[i] != 0:
-        spiralProj[i] = spiral[i] * 0
-
-# plotting lines
-ax.plot3D(line[0], line[1], line[2], c='b') # original vector
-ax.plot3D(proj[0], proj[1], proj[2], c = 'r') # projected vector
-
-# plotting spirals
-ax.plot(spiral[0], spiral[1], spiral[2])
-ax.plot(spiralProj[0], spiralProj[1], spiralProj[2])
-
-# ax.legend(['Original Line','Projected Line']) # for lines
-# ax.legend(['Original Spiral', 'Projected Spiral']) # for spirals
-ax.legend(['Original Line','Projected Line', 'Original Spiral', 'Projected Spiral']) # for both
+# plotting originals & projections
+ax.plot(body[:,0], body[:,1], body[:,2])
+plt.plot(projection[:,0], projection[:,1], projection[:,2], 'b--')
+plt.plot(origin[0], origin[1], origin[2], 'r+')
+ax.legend(['Original','Projected', 'Plane Origin'])
 
 # uncomment/alter to change viewing angle
-# ax.view_init(elev=0,azim=0) # parallel to plane
-# ax.view_init(elev=0,azim=90) # head-on to plane
+# ax.view_init(elev=0,azim=0) # head-on to plane
+# ax.view_init(elev=0,azim=-90) # parallel to plane
 # ax.view_init(elev=90,azim=0) # above plane
 
 plt.show() # display figures at end
